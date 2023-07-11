@@ -7,28 +7,15 @@ Socket::Socket()
 
 }
 
-Socket::Socket(const std::string &name_, const std::string &ipAddress_, const int port_):name(name_), ipAddress(ipAddress_), port(port_)
+Socket::Socket(const std::string &name_, const std::string &ipAddress_, const int port_)
 {
-    WSAData wsaData;
-    WORD DLLVersion = MAKEWORD(2, 1);
-
-    if(WSAStartup(DLLVersion, &wsaData) != 0)
-    {
-        std::cout << "Error" << std::endl;
-        exit(1);
-    }
-
-    sizeofhint = sizeof(hint);
-    hint.sin_family = AF_INET;
-    hint.sin_port = htons(port);
-    hint.sin_addr.s_addr = inet_addr(ipAddress.c_str());
-
-    sock = socket(AF_INET, SOCK_STREAM, NULL);
+    create_socket(name_, ipAddress_, port_);
 }
 
 Socket::~Socket()
 {
     closesocket(sock);
+    WSACleanup();
 }
 
 void Socket::create_socket(const std::string &name_, const std::string &ipAddress_, const int port_)
@@ -60,6 +47,7 @@ void Socket::create_socket(const std::string &name_, const std::string &ipAddres
 void Socket::close_socket()
 {
     closesocket(sock);
+    WSACleanup();
 }
 
 int Socket::bind_socket()
@@ -82,6 +70,7 @@ void Socket::listen_socket()
 int Socket::accept_socket(SOCKET &&accept_socket)
 {
     int clientAddressSize = sizeof(hint);
+
     if ((sock = accept(accept_socket, (struct sockaddr*)&hint, &clientAddressSize)) == INVALID_SOCKET) {
         std::cerr << "Failed to accept incoming connection." << std::endl;
         return -1;
@@ -100,11 +89,10 @@ int Socket::connect_socket()
     {
         ++counter_of_connnections;
 
-
         std::cerr << "Client: failed to connect to server"<< std::endl;
         connectRes = connect(sock,(sockaddr*)&hint,sizeof(hint));
     }
-    return connectRes;
+    return 1;
 }
 
 SOCKET Socket::getSocket()
@@ -114,7 +102,7 @@ SOCKET Socket::getSocket()
 
 void Socket::setSocket(const SOCKET &socket)
 {
-    sock = std::move(socket);
+    sock = socket;
 }
 
 SOCKADDR_IN Socket::getSOCKADDR_IN()

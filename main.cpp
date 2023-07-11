@@ -23,5 +23,7 @@ int main()
     th1.join();
     th2.join();
 
+    system("pause");
+
     return 0;
 }
